@@ -12,7 +12,7 @@ See `assignment.txt` for the full specification and tiered requirements.
 
 - **Live API only**: Must call the real Open Library API — no hard-coded/cached sample responses as test fixtures.
 - **PII handling**: Patron name and email must be irreversibly hashed before storage. Hashed email is used for deduplication.
-- **Tenant isolation**: All API operations are scoped to a tenant. One tenant's data must never appear in another's responses.
+- **Tenant isolation**: All API operations are scoped to a tenant via URL path (`/api/v1/tenants/{tenant_slug}/...`). One tenant's data must never appear in another's responses.
 - **Single-command startup**: The project must be runnable via `make run`, `docker compose up`, or equivalent.
 - **Prompt log required**: All AI interactions must be captured in `prompt-log.md` at repo root.
 

@@ -88,19 +88,19 @@ tenant-library/
 
 ## API Endpoints
 
-All require `X-Tenant-ID` header. All under `/api/v1/`.
+All under `/api/v1/tenants/{tenant_slug}/`.
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/books` | List books (paginated, filterable by author/subject/year, keyword search via `?q=`) |
-| `GET` | `/books/{id}` | Single book detail |
-| `POST` | `/ingestion` | Queue ingestion job (author or subject) — returns job_id |
-| `GET` | `/ingestion/jobs` | List ingestion jobs |
-| `GET` | `/ingestion/jobs/{id}` | Job status + progress |
-| `GET` | `/activity-log` | Paginated ingestion history |
-| `POST` | `/reading-lists` | Submit reading list (PII hashed before storage) |
-| `GET` | `/reading-lists` | List reading lists (masked PII) |
-| `GET` | `/reading-lists/{id}` | Reading list detail |
+| `GET` | `/tenants/{tenant_slug}/books` | List books (paginated, filterable by author/subject/year, keyword search via `?q=`) |
+| `GET` | `/tenants/{tenant_slug}/books/{id}` | Single book detail |
+| `POST` | `/tenants/{tenant_slug}/ingestion` | Queue ingestion job (author or subject) — returns job_id |
+| `GET` | `/tenants/{tenant_slug}/ingestion/jobs` | List ingestion jobs |
+| `GET` | `/tenants/{tenant_slug}/ingestion/jobs/{id}` | Job status + progress |
+| `GET` | `/tenants/{tenant_slug}/activity-log` | Paginated ingestion history |
+| `POST` | `/tenants/{tenant_slug}/reading-lists` | Submit reading list (PII hashed before storage) |
+| `GET` | `/tenants/{tenant_slug}/reading-lists` | List reading lists (masked PII) |
+| `GET` | `/tenants/{tenant_slug}/reading-lists/{id}` | Reading list detail |
 
 ## Key Design Decisions
 
