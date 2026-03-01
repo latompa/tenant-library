@@ -9,3 +9,4 @@ build/
 .mypy_cache/
 chat_export_*.md
 venv/
+celerybeat-schedule
