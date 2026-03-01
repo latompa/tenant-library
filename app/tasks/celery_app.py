@@ -7,6 +7,7 @@ celery_app = Celery(
     "tenant_library",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
+    include=["app.tasks.ingestion_tasks"],
 )
 
 celery_app.conf.update(

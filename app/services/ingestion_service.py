@@ -21,11 +21,13 @@ class IngestionService:
         self.ol_client = ol_client
 
     async def ingest(
-        self, tenant_id: uuid.UUID, query_type: str, query_value: str, limit: int = 50
+        self, tenant_id: uuid.UUID, query_type: str, query_value: str,
+        limit: int = 50, job_id: uuid.UUID | None = None,
     ) -> IngestionLog:
         """Run the full ingestion pipeline and return the activity log entry."""
         log = IngestionLog(
             tenant_id=tenant_id,
+            job_id=job_id,
             query_type=query_type,
             query_value=query_value,
             status="running",
