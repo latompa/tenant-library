@@ -16,10 +16,46 @@ See `assignment.txt` for the full specification and tiered requirements.
 - **Single-command startup**: The project must be runnable via `make run`, `docker compose up`, or equivalent.
 - **Prompt log required**: All AI interactions must be captured in `prompt-log.md` at repo root.
 
-## Architecture (Planned Tiers)
+## Build & Run
 
-**Tier 1 — Core**: Ingest works by author/subject from Open Library, store locally with full metadata (title, authors, year, subjects, cover URL). REST API for listing, filtering, searching, and detail views. Activity log for ingestion operations.
+```bash
+make run          # docker compose up --build
+make stop         # docker compose down
+make test         # docker compose exec api pytest tests/ -v
+```
 
-**Tier 2 — Production**: Reading list submissions with PII hashing. Background job queue for non-blocking ingestion with progress visibility and automatic catalog freshness.
+Run a single test file:
+```bash
+docker compose exec api pytest tests/test_services/test_pii.py -v
+```
 
-**Tier 3 — Depth options**: Version management (track metadata changes across re-ingestions) or noisy neighbor throttling (per-tenant resource limits).
+Run a single test by name:
+```bash
+docker compose exec api pytest tests/ -v -k test_submit_reading_list
+```
+
+## Tech Stack
+
+- **Python 3.12** / **FastAPI** / **uvicorn** (API server)
+- **PostgreSQL 16** / **SQLAlchemy 2.0** async / **Alembic** (database + migrations)
+- **Celery** + **Redis** (background ingestion jobs + daily refresh via Beat)
+- **httpx** (async HTTP client for Open Library)
+- **Docker Compose** (5 services: api, db, redis, celery-worker, celery-beat)
+
+## Architecture
+
+- **Row-level tenant isolation**: Every table carries `tenant_id` FK. FastAPI path dependency (`app/api/deps.py`) extracts tenant from URL and filters queries.
+- **Two-pass ingestion**: Search OL first (partial data), then enrich via `/works` and `/authors` endpoints (`app/services/ingestion_service.py`).
+- **Async background ingestion**: Celery worker with concurrency=1 to stay within OL's 3 req/s rate limit. Tasks in `app/tasks/ingestion_tasks.py`.
+- **HMAC-SHA256 PII hashing**: Patron name/email hashed with server secret (`app/services/pii.py`). Email hash used for dedup. Plaintext never stored.
+- **Reading list replace semantics**: Resubmitting with the same email replaces previous items, not appends (`app/services/reading_list_service.py`).
+- **Catalog-first resolution**: Reading list book resolution checks local catalog before hitting OL API.
+
+## Key Directories
+
+- `app/api/v1/` — Route handlers (books, ingestion, reading_lists, activity_log)
+- `app/services/` — Business logic (ingestion pipeline, book queries, reading lists, PII)
+- `app/clients/openlibrary.py` — OL API client with rate limiting, retries, backoff
+- `app/models/` — SQLAlchemy models (9 tables)
+- `app/tasks/` — Celery app, ingestion tasks, Beat schedule
+- `tests/` — pytest suite (unit + integration, 34 tests)
