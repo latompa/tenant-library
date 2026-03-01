@@ -8,3 +8,4 @@ build/
 .pytest_cache/
 .mypy_cache/
 chat_export_*.md
+venv/
