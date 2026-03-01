@@ -77,17 +77,18 @@ class ReadingListService:
             if resolved:
                 resolved_books.append(resolved)
                 # Add item to reading list
+                book_id = None
+                if resolved.found_in_catalog:
+                    catalog_book = await self._find_in_catalog(tenant_id, resolved.ol_work_key)
+                    if catalog_book:
+                        book_id = catalog_book.id
                 item = ReadingListItem(
                     reading_list_id=reading_list.id,
                     ol_work_key=resolved.ol_work_key,
                     isbn=book_ref.isbn,
-                    book_id=None,  # set below if in catalog
+                    book_id=book_id,
                     resolved=True,
                 )
-                # Check if book is in the tenant's catalog
-                catalog_book = await self._find_in_catalog(tenant_id, resolved.ol_work_key)
-                if catalog_book:
-                    item.book_id = catalog_book.id
                 self.session.add(item)
             else:
                 unresolved_books.append(unresolved)
@@ -127,7 +128,16 @@ class ReadingListService:
                     isbn=book_ref.isbn, reason="ISBN not found on Open Library"
                 )
 
-        # Check if the work exists on Open Library
+        # Check catalog first — skip OL call if we already have the book
+        catalog_book = await self._find_in_catalog(tenant_id, work_key)
+        if catalog_book:
+            return ResolvedBook(
+                ol_work_key=work_key,
+                title=catalog_book.title,
+                found_in_catalog=True,
+            ), None
+
+        # Not in catalog — verify it exists on Open Library
         try:
             work_detail = await self.ol_client.get_work(work_key)
         except OpenLibraryError:
@@ -136,12 +146,10 @@ class ReadingListService:
                 reason="Work not found on Open Library",
             )
 
-        # Check if it's already in the tenant's catalog
-        catalog_book = await self._find_in_catalog(tenant_id, work_key)
         return ResolvedBook(
             ol_work_key=work_key,
             title=work_detail.title,
-            found_in_catalog=catalog_book is not None,
+            found_in_catalog=False,
         ), None
 
     async def _find_in_catalog(self, tenant_id: uuid.UUID, ol_work_key: str) -> Book | None:
