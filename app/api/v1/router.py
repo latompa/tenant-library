@@ -1,6 +1,11 @@
 from fastapi import APIRouter
 
+from app.api.v1.activity_log import router as activity_log_router
+from app.api.v1.ingestion import router as ingestion_router
+
 v1_router = APIRouter()
 
-# All tenant-scoped routes will be mounted under /tenants/{tenant_slug}/
-# Sub-routers are included here as they are implemented.
+tenant_prefix = "/tenants/{tenant_slug}"
+
+v1_router.include_router(ingestion_router, prefix=tenant_prefix)
+v1_router.include_router(activity_log_router, prefix=tenant_prefix)
