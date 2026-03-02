@@ -8,16 +8,27 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+def _session_start_time(entries: list[dict]) -> str:
+    """Return the earliest timestamp from a session's entries."""
+    for entry in entries:
+        ts = entry.get("timestamp", "")
+        if ts:
+            return ts
+    return ""
+
+
 def load_sessions(project_dir: Path) -> list[tuple[str, list[dict]]]:
-    """Load all .jsonl session files from a project directory."""
+    """Load all .jsonl session files, sorted oldest-first by start time."""
     sessions = []
-    for f in sorted(project_dir.glob("*.jsonl")):
+    for f in project_dir.glob("*.jsonl"):
         lines = []
         for line in f.read_text().splitlines():
             if line.strip():
                 lines.append(json.loads(line))
         if lines:
             sessions.append((f.stem, lines))
+    # Sort by earliest timestamp so oldest session comes first
+    sessions.sort(key=lambda s: _session_start_time(s[1]))
     return sessions
 
 
