@@ -87,6 +87,7 @@ class BookService:
             BookSummary(
                 id=book.id,
                 ol_work_key=book.ol_work_key,
+                isbn=book.isbn,
                 title=book.title,
                 authors=[a.name for a in book.authors],
                 first_publish_year=book.first_publish_year,
@@ -117,6 +118,7 @@ class BookService:
         return BookDetail(
             id=book.id,
             ol_work_key=book.ol_work_key,
+            isbn=book.isbn,
             title=book.title,
             authors=[
                 AuthorSummary(
