@@ -24,11 +24,13 @@ def event_loop():
 async def engine():
     eng = create_async_engine(settings.DATABASE_URL)
     async with eng.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield eng
+    # Truncate all tables instead of dropping them, so Alembic's
+    # alembic_version table (and the schema itself) survives test runs.
     async with eng.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(table.delete())
     await eng.dispose()
 
 
