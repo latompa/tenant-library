@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.api.v1.router import v1_router
 from app.database import engine
+from app.middleware.rate_limit import TenantRateLimitMiddleware
 
 
 @asynccontextmanager
@@ -19,6 +20,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(TenantRateLimitMiddleware)
 app.include_router(v1_router, prefix="/api/v1")
 
 

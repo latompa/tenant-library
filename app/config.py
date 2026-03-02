@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     PII_HASH_SECRET: str = "change-me-in-production"
     OL_RATE_LIMIT_RPS: float = 3.0
     OL_REQUEST_TIMEOUT: float = 30.0
+    RATE_LIMIT_PER_MINUTE: int = 60
 
     model_config = {"env_file": ".env"}
 

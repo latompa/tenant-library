@@ -94,6 +94,16 @@ async def _ingest_works_async(task, tenant_id: str, job_id: str, query_type: str
 
 
 @celery_app.task
+def run_fair_dispatch():
+    """Periodic task: dispatch queued tasks fairly across tenants."""
+    from app.tasks.fair_scheduler import dispatch_fair_batch
+
+    dispatched = dispatch_fair_batch()
+    if dispatched:
+        logger.info("Fair dispatch: sent %d task(s) to Celery", dispatched)
+
+
+@celery_app.task
 def refresh_all_catalogs():
     """Periodic task: re-run recent ingestion queries to keep catalogs fresh."""
     _run_async(_refresh_all_catalogs_async())
@@ -136,12 +146,18 @@ async def _refresh_all_catalogs_async():
             session.add(job)
             await session.flush()
 
-            ingest_works.delay(
+            from app.tasks.fair_scheduler import enqueue_task
+
+            enqueue_task(
                 tenant_id=str(tenant_id),
-                job_id=str(job.id),
-                query_type=query_type,
-                query_value=query_value,
-                limit=50,
+                task_name="app.tasks.ingestion_tasks.ingest_works",
+                kwargs={
+                    "tenant_id": str(tenant_id),
+                    "job_id": str(job.id),
+                    "query_type": query_type,
+                    "query_value": query_value,
+                    "limit": 50,
+                },
             )
             logger.info(f"Queued refresh: {query_type}={query_value} for tenant {tenant_id}")
 

@@ -24,5 +24,9 @@ celery_app.conf.update(
             "task": "app.tasks.ingestion_tasks.refresh_all_catalogs",
             "schedule": crontab(hour=3, minute=0),
         },
+        "fair-dispatch": {
+            "task": "app.tasks.ingestion_tasks.run_fair_dispatch",
+            "schedule": 5.0,
+        },
     },
 )

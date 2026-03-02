@@ -23,7 +23,7 @@ async def trigger_ingestion(
     session: AsyncSession = Depends(get_session),
 ):
     """Queue a catalog ingestion job from Open Library by author or subject."""
-    from app.tasks.ingestion_tasks import ingest_works
+    from app.tasks.fair_scheduler import enqueue_task_async
 
     # Create job record
     job = IngestionJob(
@@ -36,13 +36,17 @@ async def trigger_ingestion(
     session.add(job)
     await session.commit()
 
-    # Queue Celery task
-    ingest_works.delay(
+    # Enqueue into fair per-tenant queue (dispatched to Celery by scheduler)
+    await enqueue_task_async(
         tenant_id=str(tenant.id),
-        job_id=str(job.id),
-        query_type=body.query_type,
-        query_value=body.query_value,
-        limit=body.limit,
+        task_name="app.tasks.ingestion_tasks.ingest_works",
+        kwargs={
+            "tenant_id": str(tenant.id),
+            "job_id": str(job.id),
+            "query_type": body.query_type,
+            "query_value": body.query_value,
+            "limit": body.limit,
+        },
     )
 
     return IngestionJobResponse(
