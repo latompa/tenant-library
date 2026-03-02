@@ -233,7 +233,6 @@ curl http://localhost:8000/health
 ## What I'd Do Differently With More Time
 
 - **Tier 3 — Version management**: Track metadata changes across re-ingestions with a version history table and diff API
-- **Tier 3 — Noisy neighbor throttling**: Per-tenant rate limiting with Redis token buckets and resource consumption dashboards
 - **Full-text search**: PostgreSQL `tsvector` GIN index on book titles for faster keyword search at scale
 - **Separate test database**: Tests currently run against the main DB; a dedicated test DB would prevent interference
 - **OpenAPI client mock**: Use `respx` to mock the OL client in tests for faster, more reliable test runs
