@@ -8,37 +8,37 @@ A multi-tenant catalog service that ingests books from [Open Library](https://op
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          Docker Compose                             │
 │                                                                     │
-│  ┌──────────┐    ┌──────────────┐    ┌──────────────────────────┐  │
-│  │          │    │              │    │     Open Library API      │  │
-│  │  Client  │───▶│   FastAPI    │───▶│  openlibrary.org/api     │  │
-│  │ (curl/   │◀───│   (uvicorn)  │◀───│                          │  │
-│  │  browser)│    │   :8000      │    │  - /search.json          │  │
-│  │          │    │              │    │  - /works/{key}.json      │  │
-│  └──────────┘    └──────┬───────┘    │  - /authors/{key}.json   │  │
-│                         │            │  - /subjects/{name}.json  │  │
-│                         │            │  - /isbn/{isbn}.json      │  │
-│                         │            └──────────────────────────┘  │
+│  ┌──────────┐    ┌──────────────┐    ┌──────────────────────────┐   │
+│  │          │    │              │    │     Open Library API     │   │
+│  │  Client  │───▶│   FastAPI    │───▶│  openlibrary.org/api     │   │
+│  │ (curl/   │◀───│   (uvicorn)  │◀───│                          │   │
+│  │  browser)│    │   :8000      │    │  - /search.json          │   │
+│  │          │    │              │    │  - /works/{key}.json     │   │
+│  └──────────┘    └──────┬───────┘    │  - /authors/{key}.json   │   │
+│                         │            │  - /subjects/{name}.json │   │
+│                         │            │  - /isbn/{isbn}.json     │   │
+│                         │            └──────────────────────────┘   │
 │                         │                       ▲                   │
 │                         ▼                       │                   │
-│                  ┌─────────────┐         ┌──────┴───────┐          │
-│                  │             │         │              │          │
-│                  │ PostgreSQL  │◀────────│    Celery     │          │
-│                  │   :5432     │         │    Worker     │          │
-│                  │             │         │              │          │
-│                  │ - tenants   │         └──────────────┘          │
+│                  ┌─────────────┐         ┌──────┴───────┐           │
+│                  │             │         │              │           │
+│                  │ PostgreSQL  │◀────────│    Celery    │           │
+│                  │   :5432     │         │    Worker    │           │
+│                  │             │         │              │           │
+│                  │ - tenants   │         └──────────────┘           │
 │                  │ - books     │                ▲                   │
 │                  │ - authors   │                │                   │
-│                  │ - subjects  │         ┌──────┴───────┐          │
-│                  │ - jobs/logs │         │              │          │
-│                  │ - reading   │         │    Redis      │          │
-│                  │   lists     │         │    :6379      │          │
-│                  │             │         │   (broker)    │          │
-│                  └─────────────┘         └──────────────┘          │
-│                                                ▲                   │
-│                                         ┌──────┴───────┐          │
-│                                         │  Celery Beat  │          │
-│                                         │  (scheduler)  │          │
-│                                         └──────────────┘          │
+│                  │ - subjects  │         ┌──────┴───────┐           │
+│                  │ - jobs/logs │         │              │           │
+│                  │ - reading   │         │    Redis     │           │
+│                  │   lists     │         │    :6379     │           │
+│                  │             │         │   (broker)   │           │
+│                  └─────────────┘         └──────────────┘           │
+│                                                ▲                    │
+│                                         ┌──────┴───────┐            │
+│                                         │  Celery Beat │            │
+│                                         │  (scheduler) │            │
+│                                         └──────────────┘            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
