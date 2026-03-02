@@ -16,6 +16,7 @@ class AuthorSummary(BaseModel):
 class BookSummary(BaseModel):
     id: UUID
     ol_work_key: str
+    isbn: str | None = None
     title: str
     authors: list[str]
     first_publish_year: int | None = None
@@ -28,6 +29,7 @@ class BookSummary(BaseModel):
 class BookDetail(BaseModel):
     id: UUID
     ol_work_key: str
+    isbn: str | None = None
     title: str
     authors: list[AuthorSummary]
     first_publish_year: int | None = None

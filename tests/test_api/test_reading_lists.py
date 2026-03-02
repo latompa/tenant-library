@@ -14,6 +14,7 @@ async def catalog_book(db_session: AsyncSession, tenant):
     """A book already in the tenant's catalog."""
     book = Book(
         tenant_id=tenant.id, ol_work_key="OL27448W",
+        isbn="9780618640157",
         title="The Lord of the Rings", first_publish_year=1954,
     )
     db_session.add(book)
@@ -96,6 +97,24 @@ async def test_submit_unresolved_book(client, tenant):
     data = resp.json()
     assert len(data["unresolved_books"]) == 1
     assert "not found" in data["unresolved_books"][0]["reason"].lower()
+
+
+@pytest.mark.asyncio
+async def test_submit_reading_list_by_isbn(client, tenant, catalog_book):
+    """ISBN lookup should resolve to the catalog book without hitting OL."""
+    resp = await client.post(
+        f"/api/v1/tenants/{tenant.slug}/reading-lists",
+        json={
+            "patron_name": "ISBN User",
+            "email": "isbn@example.com",
+            "books": [{"isbn": "9780618640157"}],
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["resolved_books"]) == 1
+    assert data["resolved_books"][0]["found_in_catalog"] is True
+    assert data["resolved_books"][0]["ol_work_key"] == "OL27448W"
 
 
 @pytest.mark.asyncio

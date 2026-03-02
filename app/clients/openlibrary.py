@@ -24,6 +24,7 @@ class SearchResult:
     first_publish_year: int | None = None
     cover_id: int | None = None
     subjects: list[str] = field(default_factory=list)
+    isbn: str | None = None  # first ISBN if available
 
 
 @dataclass
@@ -138,13 +139,14 @@ class OpenLibraryClient:
             params={
                 "author": author_name,
                 "limit": limit,
-                "fields": "key,title,author_name,author_key,first_publish_year,subject,cover_i",
+                "fields": "key,title,author_name,author_key,first_publish_year,subject,cover_i,isbn",
             },
         )
         data = response.json()
         results = []
         for doc in data.get("docs", []):
             key = doc.get("key", "")
+            isbns = doc.get("isbn", [])
             results.append(
                 SearchResult(
                     work_key=self._strip_key(key),
@@ -154,6 +156,7 @@ class OpenLibraryClient:
                     first_publish_year=doc.get("first_publish_year"),
                     cover_id=doc.get("cover_i"),
                     subjects=doc.get("subject", [])[:50],  # cap subjects
+                    isbn=isbns[0] if isbns else None,
                 )
             )
         return results

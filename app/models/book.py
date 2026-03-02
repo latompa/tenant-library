@@ -35,6 +35,7 @@ class Book(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     ol_work_key: Mapped[str] = mapped_column(String(50), nullable=False)
+    isbn: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(1000), nullable=False)
     first_publish_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cover_id: Mapped[int | None] = mapped_column(Integer, nullable=True)

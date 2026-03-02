@@ -79,7 +79,7 @@ class ReadingListService:
                 # Add item to reading list
                 book_id = None
                 if resolved.found_in_catalog:
-                    catalog_book = await self._find_in_catalog(tenant_id, resolved.ol_work_key)
+                    catalog_book = await self._find_by_work_key(tenant_id, resolved.ol_work_key)
                     if catalog_book:
                         book_id = catalog_book.id
                 item = ReadingListItem(
@@ -114,28 +114,39 @@ class ReadingListService:
     async def _resolve_book(
         self, tenant_id: uuid.UUID, book_ref: BookReference
     ) -> tuple[ResolvedBook | None, UnresolvedBook | None]:
-        """Try to resolve a book reference via Open Library."""
+        """Try to resolve a book reference. Checks ISBN first, then OL work key."""
         work_key = book_ref.ol_work_key
 
-        # If ISBN provided, resolve to work key first
-        if book_ref.isbn and not work_key:
-            try:
-                work_key = await self.ol_client.resolve_isbn(book_ref.isbn)
-            except OpenLibraryError:
-                pass
-            if not work_key:
-                return None, UnresolvedBook(
-                    isbn=book_ref.isbn, reason="ISBN not found on Open Library"
-                )
+        # If ISBN provided, try catalog ISBN lookup first
+        if book_ref.isbn:
+            catalog_book = await self._find_by_isbn(tenant_id, book_ref.isbn)
+            if catalog_book:
+                return ResolvedBook(
+                    ol_work_key=catalog_book.ol_work_key,
+                    title=catalog_book.title,
+                    found_in_catalog=True,
+                ), None
 
-        # Check catalog first — skip OL call if we already have the book
-        catalog_book = await self._find_in_catalog(tenant_id, work_key)
-        if catalog_book:
-            return ResolvedBook(
-                ol_work_key=work_key,
-                title=catalog_book.title,
-                found_in_catalog=True,
-            ), None
+            # ISBN not in catalog — resolve to work key via OL
+            if not work_key:
+                try:
+                    work_key = await self.ol_client.resolve_isbn(book_ref.isbn)
+                except OpenLibraryError:
+                    pass
+                if not work_key:
+                    return None, UnresolvedBook(
+                        isbn=book_ref.isbn, reason="ISBN not found on Open Library"
+                    )
+
+        # Check catalog by work key
+        if work_key:
+            catalog_book = await self._find_by_work_key(tenant_id, work_key)
+            if catalog_book:
+                return ResolvedBook(
+                    ol_work_key=work_key,
+                    title=catalog_book.title,
+                    found_in_catalog=True,
+                ), None
 
         # Not in catalog — verify it exists on Open Library
         try:
@@ -152,7 +163,15 @@ class ReadingListService:
             found_in_catalog=False,
         ), None
 
-    async def _find_in_catalog(self, tenant_id: uuid.UUID, ol_work_key: str) -> Book | None:
+    async def _find_by_isbn(self, tenant_id: uuid.UUID, isbn: str) -> Book | None:
+        result = await self.session.execute(
+            select(Book).where(
+                Book.tenant_id == tenant_id, Book.isbn == isbn
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def _find_by_work_key(self, tenant_id: uuid.UUID, ol_work_key: str) -> Book | None:
         result = await self.session.execute(
             select(Book).where(
                 Book.tenant_id == tenant_id, Book.ol_work_key == ol_work_key

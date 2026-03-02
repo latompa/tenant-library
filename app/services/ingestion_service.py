@@ -116,6 +116,7 @@ class IngestionService:
             book = Book(
                 tenant_id=tenant_id,
                 ol_work_key=result.work_key,
+                isbn=result.isbn,
                 title=title,
                 first_publish_year=first_publish_year,
                 cover_id=cover_id,
@@ -127,6 +128,7 @@ class IngestionService:
         else:
             # Update existing book
             book.title = title
+            book.isbn = result.isbn or book.isbn
             book.first_publish_year = first_publish_year or book.first_publish_year
             book.cover_id = cover_id or book.cover_id
             book.cover_url = cover_url or book.cover_url
