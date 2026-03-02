@@ -4,8 +4,11 @@ from app.api.v1.activity_log import router as activity_log_router
 from app.api.v1.books import router as books_router
 from app.api.v1.ingestion import router as ingestion_router
 from app.api.v1.reading_lists import router as reading_lists_router
+from app.api.v1.tenants import router as tenants_router
 
 v1_router = APIRouter()
+
+v1_router.include_router(tenants_router)
 
 tenant_prefix = "/tenants/{tenant_slug}"
 
